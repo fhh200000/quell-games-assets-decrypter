@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 int main(int argc,char** argv)
 {
     const char* salt="fallen";
@@ -14,17 +15,22 @@ int main(int argc,char** argv)
     char* output_file_name = malloc(input_file_name_length+5);
     strcpy(output_file_name,argv[1]);
     strcpy(output_file_name+input_file_name_length,".out");
-    enc = fopen(argv[1],"r");
+    enc = fopen(argv[1],"rb");
     dec = fopen(output_file_name,"wb");
-    int i=0;
-    while(!feof(enc)) {
+    if(enc == NULL)
+    {
+        fprintf(stderr,"Error:Open file failed.\n");
+        return EXIT_FAILURE;
+    }
+    uint64_t file_length=0;
+    fseek(enc,0,SEEK_END);
+    file_length = ftell(enc);
+    printf("size:%lld bytes.\n",file_length);
+    fseek(enc,0,SEEK_SET);
+    for(int i=0;i<file_length;i++) {
         encrypted = fgetc(enc);
-        if(encrypted==EOF) {
-            break;
-        }
         decrypted = encrypted^salt[i%6];
         fputc(decrypted,dec);
-        i++;
     }
     fclose(enc);
     fclose(dec);
